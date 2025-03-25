@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/healthAIHack/static/css/main.96318080.css",
+    "main.js": "/healthAIHack/static/js/main.374d24b4.js",
+    "index.html": "/healthAIHack/index.html",
+    "main.96318080.css.map": "/healthAIHack/static/css/main.96318080.css.map",
+    "main.374d24b4.js.map": "/healthAIHack/static/js/main.374d24b4.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.96318080.css",
+    "static/js/main.374d24b4.js"
+  ]
+}
