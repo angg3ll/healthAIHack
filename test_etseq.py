@@ -2,19 +2,31 @@ from Bio.SeqUtils import MeltingTemp as mt
 from Bio.Seq import Seq
 import numpy as np
 
-# Example PWM matrices, need real from etseq
+# real pwm from etseq code
 pwm_p90 = np.array([
-    [0.47, 0.62, 0.19, 0.50, 0.29, 0.41, 0.36],  # A
-    [0.28, 0.69, 0.00, 0.45, 0.32, 0.36, 0.00],  # T
-    [0.00, 0.40, 0.00, 0.00, 0.00, 0.00, 0.50],  # G
-    [0.00, 0.00, 0.36, 0.00, 0.41, 0.00, 0.00]   # C
-])
+    [0.8473,0.9985,1.1451,1.0116,0.6419,0.5465,0.7376,0.6506,1.9924,
+     1.0986,0.0000,0.0606,0.3483,0.0000,0.8473,0.9985,1.1451,1.0116,
+     0.6419,0.5465,0.7376,0.6506,1.9924,1.0986],  # A
+    [0.2719, 0.0000, 0.2007, 0.6061, 0.3054, 0.2364, 0.8329, 0.4274,
+     0.3830, 0.0000, 0.1178, 0.0000, 0.0000, 0.1335, 0.2719, 0.0000,
+     0.2007, 0.6061, 0.3054, 0.2364, 0.8329, 0.4274, 0.3830, 0.0000],  # T
+    [0.3365, 0.0541, 0.0000, 0.1466, 0.0541, 0.1719, 0.3023, 0.7376,
+     0.0465, 0.5390, 0.1178, 0.3483, 0.0606, 0.0645, 0.3365, 0.0541,
+     0.0000, 0.1466, 0.0541, 0.1719, 0.3023, 0.7376, 0.0465, 0.5390],  # G
+    [0.0000, 0.1112, 0.4520, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
+     0.0000, 0.4700, 0.4925, 0.0606, 0.0606, 0.0000, 0.0000, 0.1112,
+     0.4520, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.4700] # C
+    ])
 
 pwm_n10 = np.array([
     [0.20, 0.30, 0.10, 0.40, 0.50, 0.20, 0.25],  # A
     [0.40, 0.35, 0.20, 0.25, 0.20, 0.30, 0.15],  # T
     [0.15, 0.20, 0.30, 0.20, 0.10, 0.25, 0.30],  # G
     [0.25, 0.15, 0.40, 0.15, 0.20, 0.25, 0.30]   # C
+])
+
+pwm_diff = np.array([
+
 ])
 
 def pwm_score(pwm, seq):
@@ -73,8 +85,8 @@ def analyze_sequence(seq):
 
     # Compute melting temperature (Tm)
     start_seq = Seq(start_region)  # Convert start_region to a Seq object
-    # tm_value = mt.Tm_NN(start_seq, Na=1000, Mg=0, dnac1=50, saltcorr=7)
-    tm_value = mt.Tm_NN(start_seq, Na=21, Mg=3, dnac1=50, saltcorr=7)
+    tm_value = mt.Tm_NN(start_seq, Na=1000, Mg=0, dnac1=50, saltcorr=7)
+    #tm_value = mt.Tm_NN(start_seq, Na=21, Mg=3, dnac1=50, saltcorr=7)
 
     return (f"Valid sequence! Start: {start_region}, Random: {random_region}, Cut Site: {cut_site}, End: {end_region},"
             f" P90: {p90_score}, N10: {n10_score}, Difference: {difference}, Tm: {tm_value:.2f} deg C")
@@ -84,7 +96,7 @@ sequences = [
     "CCTACGACTGAACAGACTCTCCTACGACTG",  # Should be valid
     "CCTACGACTTAACAGACTCTCCTACGACTT",
     "CCTACGACGGAACAGACTCTCCTACGACGG",
-    "CCTACGAGTGAACAGACTCTCCTACGAGTG"# Possible invalid sequence
+    "CCTACGAGTGAACAGACTCTCCTACGAGTG"
 ]
 
 for seq in sequences:

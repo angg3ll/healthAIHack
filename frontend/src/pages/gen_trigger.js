@@ -8,6 +8,7 @@ const GenerateTrigger = () => {
   const [fullSequence, setFullSequence] = useState("");
   const [tm1, setTm1] = useState("");
   const [numBonds, setNumBonds] = useState("");
+  const [error, setError] = useState(""); // Added state for error message
 
   // Function to generate a random sequence of bases (A, T, C, G)
   const generateRandomBases = (length) => {
@@ -17,6 +18,12 @@ const GenerateTrigger = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+        // Check each sequence for valid characters (CTAG)
+    if (!/^[CTAG]+$/.test(dnaSequence)) {
+      setError("DNA sequence contains invalid characters. Only 'C', 'T', 'A', and 'G' are allowed.");
+      return;
+    }
 
     if (dnaSequence.length < 20) {
       alert("DNA sequence must be at least 20 bases long.");
@@ -30,6 +37,7 @@ const GenerateTrigger = () => {
     setFullSequence(`${dnaSequence.slice(0, 10)}-${randomBases}-GACTC-T-${dnaSequence.slice(0, 10)}`);
     setTm1(Math.random() * 30 + 50); // Example random TM1
     setNumBonds(Math.floor(Math.random() * 20 + 5)); // Example number of bonds
+    setError(""); // Clear error if input is valid
   };
 
   return (
@@ -46,6 +54,7 @@ const GenerateTrigger = () => {
             required
             placeholder="Enter DNA sequence here... 5'-3'"
           />
+          {error && <p className="text-danger">{error}</p>} {/* Display error message */}
         </Form.Group>
 
         <Form.Group className="mb-3">
