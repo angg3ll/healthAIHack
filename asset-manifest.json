@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/healthAIHack/static/css/main.96318080.css",
-    "main.js": "/healthAIHack/static/js/main.374d24b4.js",
+    "main.js": "/healthAIHack/static/js/main.0c2b9cb2.js",
     "index.html": "/healthAIHack/index.html",
     "main.96318080.css.map": "/healthAIHack/static/css/main.96318080.css.map",
-    "main.374d24b4.js.map": "/healthAIHack/static/js/main.374d24b4.js.map"
+    "main.0c2b9cb2.js.map": "/healthAIHack/static/js/main.0c2b9cb2.js.map"
   },
   "entrypoints": [
     "static/css/main.96318080.css",
-    "static/js/main.374d24b4.js"
+    "static/js/main.0c2b9cb2.js"
   ]
 }
