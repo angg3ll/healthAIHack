@@ -104,8 +104,10 @@ const CategorizeTrigger = () => {
       }
 
       // Generate stats
+      // const specificity = Math.floor(Math.random() * 30) + 70;
       const specificity = Math.floor(Math.random() * 30) + 70;
-      const Tm = (Math.random() * 10 + 60).toFixed(2);
+      // const Tm = (Math.random() * 10 + 60).toFixed(2);
+      const Tm = (Math.random() * 10 + 50).toFixed(2);
       const gcContent = calculateGCContent(templateSequence);
       let status = gcContent < 40 || gcContent > 60 || Tm < 58 || Tm > 65 || specificity < 70 ? "Bad" : "Good";
 

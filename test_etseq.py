@@ -1,104 +1,144 @@
+#PWM/SVM only
+
 from Bio.SeqUtils import MeltingTemp as mt
 from Bio.Seq import Seq
 import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
-# real pwm from etseq code
+# Loading data in
+df = pd.read_csv('/Users/angelyao/PycharmProjects/healthHackathon/healthAIHack/384_sequences.csv')
+
+# Remove rows with invalid results (e.g., NR, CE, SD, etc.)
+df_cleaned = df[~df['Results'].isin(['NR', 'CE', 'SD', 'LA', 'NA', 'NS'])]
+
+# Remove rows with zero values in P90, N10, or Diff
+df_cleaned = df_cleaned[(df_cleaned[['P90', 'N10', 'Diff']] != 0).all(axis=1)]
+
+# Class labels (CI = good, CII = bad)
+df_cleaned['Class'] = df_cleaned['Results'].apply(lambda x: 1 if x == 'CI' else 0)
+
+# real pwm from etseq github https://github.com/expartools/ETSeq/blob/master/Source_code_0.5.2.zip
 pwm_p90 = np.array([
     [0.8473,0.9985,1.1451,1.0116,0.6419,0.5465,0.7376,0.6506,1.9924,
      1.0986,0.0000,0.0606,0.3483,0.0000,0.8473,0.9985,1.1451,1.0116,
-     0.6419,0.5465,0.7376,0.6506,1.9924,1.0986],  # A
+     0.6419,0.5465,0.7376,0.6506,1.9924,1.0986],
     [0.2719, 0.0000, 0.2007, 0.6061, 0.3054, 0.2364, 0.8329, 0.4274,
      0.3830, 0.0000, 0.1178, 0.0000, 0.0000, 0.1335, 0.2719, 0.0000,
-     0.2007, 0.6061, 0.3054, 0.2364, 0.8329, 0.4274, 0.3830, 0.0000],  # T
+     0.2007, 0.6061, 0.3054, 0.2364, 0.8329, 0.4274, 0.3830, 0.0000],
     [0.3365, 0.0541, 0.0000, 0.1466, 0.0541, 0.1719, 0.3023, 0.7376,
      0.0465, 0.5390, 0.1178, 0.3483, 0.0606, 0.0645, 0.3365, 0.0541,
-     0.0000, 0.1466, 0.0541, 0.1719, 0.3023, 0.7376, 0.0465, 0.5390],  # G
+     0.0000, 0.1466, 0.0541, 0.1719, 0.3023, 0.7376, 0.0465, 0.5390],
     [0.0000, 0.1112, 0.4520, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
      0.0000, 0.4700, 0.4925, 0.0606, 0.0606, 0.0000, 0.0000, 0.1112,
-     0.4520, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.4700] # C
+     0.4520, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.4700]
     ])
 
-pwm_n10 = np.array([
-    [0.20, 0.30, 0.10, 0.40, 0.50, 0.20, 0.25],  # A
-    [0.40, 0.35, 0.20, 0.25, 0.20, 0.30, 0.15],  # T
-    [0.15, 0.20, 0.30, 0.20, 0.10, 0.25, 0.30],  # G
-    [0.25, 0.15, 0.40, 0.15, 0.20, 0.25, 0.30]   # C
-])
-
 pwm_diff = np.array([
-
+    [0.470003629245736, 0.628608659422374, 0.191055236762709, 0.969400557188104,
+     0.887303195000903, 0.594707107746693, 1.12846525181779, 1.09861228866811,
+     0.810930216216329, 1.09861228866811, 0, 0, 0.550046336919272, 0, 0.470003629245736,
+     0.628608659422374, 0.191055236762709, 0.969400557188104, 0.887303195000903, 0.594707107746693,
+     1.12846525181779, 1.09861228866811, 0.810930216216329, 1.09861228866811],
+    [0.287682072451781, 0.693147180559945, 0, 0.231801614057324, 1.04145387482816, 0.371563556432483,
+     0.961411167154625, 0.587786664902119, 0.204794412646013, 0, 0.559615787935423, 0.0953101798043249,
+     0.122602322092332, 0.424883193965266, 0.287682072451781, 0.693147180559945, 0, 0.231801614057324,
+     1.04145387482816, 0.371563556432483, 0.961411167154625, 0.587786664902119, 0.204794412646013, 0],
+    [0, 0.405465108108164, 0, 0.476924072090309, 0.481838086892738, 0.594707107746693,
+     0.390866308687012, 1.01856958099457, 0.300104592450338, 0.916290731874155, 0.287682072451781,
+     0.146603474191875, 0.424883193965266, 0.367724780125317, 0, 0.405465108108164, 0,
+     0.476924072090309, 0.481838086892738, 0.594707107746693, 0.390866308687012, 1.01856958099457,
+     0.300104592450338, 0.916290731874155],
+    [0, 0, 0.362905493689368, 0, 0, 0, 0, 0, 0, 0.0339015516756814, 0.559615787935423,
+     0.0953101798043249, 0, 0.262364264467491, 0, 0, 0.362905493689368, 0, 0, 0, 0, 0, 0,
+     0.0339015516756814]
 ])
 
-def pwm_score(pwm, seq):
-    """Compute PWM score for a sequence, truncating to PWM length."""
-    score = 0
-    pwm_length = pwm.shape[1]
+# Feature selection (P90 and Diff as input for classification)
+X = df_cleaned[['P90', 'Diff']].values
+y = df_cleaned['Class'].values
 
-    # Ensure sequence isn't longer than PWM length
-    seq = seq[-pwm_length:]  # Use only the last `pwm_length` bases
+# Standardizing features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-    for i, base in enumerate(seq):
-        if base == 'A':
-            score += pwm[0][i]
-        elif base == 'T':
-            score += pwm[1][i]
-        elif base == 'G':
-            score += pwm[2][i]
-        elif base == 'C':
-            score += pwm[3][i]
-    return score
+# Split data into training and testing sets (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
-def analyze_sequence(seq):
-    """Validates the sequence format, extracts the start region, and computes PWM scores."""
-    # Expected format:
-    # (10-15 bp start) + (4 bp random) + (GACTC) + (T) + (10-15 bp same as start)
+# Train the SVM classifier on the training data
+svm_classifier = SVC(kernel='linear')
+svm_classifier.fit(X_train, y_train)
 
-    # Find GACTC motif (cut site)
-    motif_pos = seq.find("GACTC")
-    if motif_pos == -1 or motif_pos + 6 > len(seq) or seq[motif_pos + 5] != 'T':
-        return "Error: GACTCT motif not found in the correct position."
+# Make predictions on the testing data
+y_pred = svm_classifier.predict(X_test)
 
-    # Extract different parts of the sequence
-    random_region = seq[motif_pos - 4:motif_pos]  # 4bp random
-    start_region = seq[:motif_pos - 4]  # 10-15bp before 4bp random region
-    cut_site = seq[motif_pos:motif_pos + 5]  # Should be "GACTC"
-    single_t = seq[motif_pos + 5]  # Single "T"
+# Compute the accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy * 100:.2f}%")
 
-    # The end region should match the start region and be the same length
-    end_start = motif_pos + 6
-    end_region = seq[end_start:end_start + len(start_region)]
+def compute_features(sequence):
+    # Truncate or pad the sequence to 15 bases
+    sequence = sequence[:22]  # Take the first 15 bases
+    sequence = sequence.ljust(22, 'A')  # Pad with 'N' if it's shorter than 15
 
-    # Validate sequence parts
-    if len(start_region) < 10 or len(start_region) > 15:
-        return "Error: Start region length incorrect."
-    if cut_site != "GACTC":
-        return "Error: Incorrect cut site."
-    if single_t != "T":
-        return "Error: T base is missing."
-    if start_region != end_region:
-        return "Error: Start and end regions do not match."
+    seq = Seq(sequence)
 
-    # Compute scores for start region
-    p90_score = pwm_score(pwm_p90, start_region)
-    n10_score = pwm_score(pwm_n10, start_region)
-    difference = p90_score - n10_score
+    # Calculate melting temperature as a feature
+    melting_temp = mt.Tm_NN(seq)
 
-    # Compute melting temperature (Tm)
-    start_seq = Seq(start_region)  # Convert start_region to a Seq object
-    tm_value = mt.Tm_NN(start_seq, Na=1000, Mg=0, dnac1=50, saltcorr=7)
-    #tm_value = mt.Tm_NN(start_seq, Na=21, Mg=3, dnac1=50, saltcorr=7)
+    # Compute P90, N10, and Diff scores using PWM
+    def compute_pwm_score(sequence, pwm):
+        score = 0
+        for i, nucleotide in enumerate(sequence):
+            if nucleotide == 'A':
+                score += pwm[0][i]
+            elif nucleotide == 'T':
+                score += pwm[1][i]
+            elif nucleotide == 'G':
+                score += pwm[2][i]
+            elif nucleotide == 'C':
+                score += pwm[3][i]
+        return score / len(sequence)  # Normalize score by length
 
-    return (f"Valid sequence! Start: {start_region}, Random: {random_region}, Cut Site: {cut_site}, End: {end_region},"
-            f" P90: {p90_score}, N10: {n10_score}, Difference: {difference}, Tm: {tm_value:.2f} deg C")
+    p90 = compute_pwm_score(sequence, pwm_p90)
+    diff = compute_pwm_score(sequence, pwm_diff)
 
-# Example sequence
-sequences = [
-    "CCTACGACTGAACAGACTCTCCTACGACTG",  # Should be valid
-    "CCTACGACTTAACAGACTCTCCTACGACTT",
-    "CCTACGACGGAACAGACTCTCCTACGACGG",
-    "CCTACGAGTGAACAGACTCTCCTACGAGTG"
-]
+    return p90, diff, melting_temp
 
-for seq in sequences:
-    print(analyze_sequence(seq))
+def classify_sequence(sequence):
+    p90, diff, melting_temp = compute_features(sequence)
 
+    print(f"p90: {p90}, diff: {diff}") #add this line
+
+    # Transform input
+    input_scaled = scaler.transform([[p90, diff]])
+    print(f"input_scaled: {input_scaled}") #add this line
+
+    # Predict using SVM
+    prediction = svm_classifier.predict(input_scaled)
+    return 'CI' if prediction[0] == 1 else 'CII'
+
+# Example: Classify new sequence
+new_sequence = "TGCGAGTGGAGCGGGACTCTTGCGAGTGGA"  # Replace with any sequence
+print(classify_sequence(new_sequence))  # Output: CI or CII
+
+# Create a grid of points to plot the decision boundary
+xx, yy = np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100))
+
+# Predict the SVM output for each point on the grid
+Z = svm_classifier.predict(np.c_[xx.ravel(), yy.ravel()])
+
+# Reshape the prediction results to match the grid
+Z = Z.reshape(xx.shape)
+
+# Plot the decision boundary
+plt.contourf(xx, yy, Z, alpha=0.75)
+plt.scatter([x[0] for x in X], [x[1] for x in X], c=y, edgecolors='k', marker='o', cmap='coolwarm')
+plt.xlabel('P90 Score')
+plt.ylabel('Diff Score')
+plt.title('SVM Decision Boundary')
+plt.show()

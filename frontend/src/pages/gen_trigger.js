@@ -35,8 +35,9 @@ const GenerateTrigger = () => {
     // Simulating generated results
     setGeneratedTrigger(dnaSequence.slice(10, 22)); // Example logic, just cutting from pos 11- 22
     setFullSequence(`${dnaSequence.slice(0, 10)}-${randomBases}-GACTC-T-${dnaSequence.slice(0, 10)}`);
-    setTm1(Math.random() * 30 + 50); // Example random TM1
-    setNumBonds(Math.floor(Math.random() * 20 + 5)); // Example number of bonds
+    // setTm1(Math.random() * 30 + 50); // Example random TM1
+    setTm1(Math.random() * 10 + 50);
+    setNumBonds(Math.floor(Math.random() * 10 + 2)); // Example number of bonds
     setError(""); // Clear error if input is valid
   };
 
